@@ -131,3 +131,9 @@ optional arguments:
 ```
 
 Pretty neet, right?
+
+# Installation
+It should work under both Pythons, but use Python3 just to make Michał Startek feel old and useless.
+```{bash}
+pip3 install docstr2argparse
+```

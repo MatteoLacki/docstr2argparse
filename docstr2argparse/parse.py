@@ -29,7 +29,7 @@ def parse_arguments(foo):
                 pass
             arg_name = p.arg_name
             if arg_name in defaults:
-                kwds['help'] += f" [default = {defaults[arg_name]}]"
+                kwds['help'] += " [default = {}]".format(defaults[arg_name])
                 kwds['default'] = defaults[arg_name]
                 arg_name = "--" + arg_name
             yield arg_name, kwds
