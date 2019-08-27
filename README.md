@@ -1,4 +1,4 @@
-# Turn a docstring to a argparse arguments.
+# Turn a docstring to argparse arguments.
 
 This reduces the boilerplate for automatically creating command line scripts with python.
 Probably other projects like this exist, but this one is small.
