@@ -132,6 +132,80 @@ optional arguments:
 
 Pretty neet, right?
 
+# More than one function
+Let's say you have multiple functions used in the script and want them all documented.
+Then:
+```{python}
+def foo1(a, b, c=1, d=2):
+    """Some function number 1.
+
+    Args:
+        a (int): the first param
+        b (str): the second param
+        c (int): some parameter
+        d (int): another parameter
+    Returns:
+        int: sum of the two ints
+    """
+    return a + b
+
+
+def foo2(e, f, g=1, h=2):
+    """Some function number 1.
+
+    Args:
+        e (int): the first param
+        f (str): the second param
+        g (int): some parameter 2
+        h (int): another parameter 2
+    Returns:
+        int: sum of the two ints
+    """
+    return e + f
+
+
+import argparse
+from itertools import chain
+
+from docstr2argparse import parse_arguments
+
+parser = argparse.ArgumentParser(description='A terribly needed script!')
+
+# print(dict(parse_arguments(foo1))) # this will be a simple dictonary!!!
+
+for name, kwds in chain(parse_arguments(foo1), parse_arguments(foo2)):
+    parser.add_argument(name, **kwds)
+
+args = parser.parse_args()
+
+print(foo1(args.a, args.b, args.c, args.d) + foo1(args.e, args.f, args.g, args.h))
+```
+
+With that script in place,
+```{bash}
+$ python3 example_with_2_functions.py -h
+usage: example_with_2_functions.py [-h] [--c C] [--d D] [--g G] [--h H]
+                                   a b e f
+
+A terribly needed script!
+
+positional arguments:
+  a           the first param
+  b           the second param
+  e           the first param
+  f           the second param
+
+optional arguments:
+  -h, --help  show this help message and exit
+  --c C       some parameter [default = 1]
+  --d D       another parameter [default = 2]
+  --g G       some parameter 2 [default = 1]
+  --h H       another parameter 2 [default = 2]
+```
+Of course, 'parse_arguments' can be used to initially parse things and then you can adjust things.
+For instance, it might be handy to adjust the names of the parameters that share their name.
+
+
 # Installation
 It should work under both Pythons, but use Python3 just to make Michał Startek feel old and useless.
 ```{bash}
