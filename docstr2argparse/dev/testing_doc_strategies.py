@@ -3,8 +3,8 @@
 import argparse
 import re
 
-from vodkas import apex3d
-from docstr2argparse.parse import parse_google, get_params
+from vodkas import apex3d, peptide3d, iadbs, plgs, get_fastas
+from docstr2argparse.parse import parse_google, get_positional_or_keyword_params
 
 docstring_long = """Analyze a Waters Raw Folder with Apex3D.
 
@@ -42,7 +42,7 @@ docstring_short = """Analyze a Waters Raw Folder with Apex3D.
     HAHAHA
     """
 
-docstring_wrong = """Analyze a Waters Raw Folder with Apex3D.
+docstring_longer = """Analyze a Waters Raw Folder with Apex3D.
     
         Ale gówno.
         Ja nie mogę.
@@ -77,19 +77,25 @@ docstring_wrong = """Analyze a Waters Raw Folder with Apex3D.
 
 parse_google(docstring_long)
 parse_google(docstring_short)
-parse_google(docstring_wrong)
-
+parse_google(docstring_longer)
 def foo():
     pass
-
 parse_google(foo.__doc__)
+
 doc = parse_google(apex3d.__doc__)
 doc['Args']
 
+doc = parse_google(get_fastas.__doc__)
 f = apex3d
+docstring = get_fastas.__doc__ 
+f = get_fastas
+get_positional_or_keyword_params(f)
 
-def get_parameters(f, args_prefix='', sort = True):
-    param2default = get_params(f)
+
+import builtins
+
+def generate_description(f, args_prefix='', sort = True):
+    param2default = get_positional_or_keyword_params(f)
     parsed = parse_google(f.__doc__)
     short_description = parsed['short_description']
     args = parsed['Args']
@@ -100,9 +106,13 @@ def get_parameters(f, args_prefix='', sort = True):
         assert args2desc[p]!='', f"Docs of {f} incomplete: {p} has empty description."
     if sort:
         args = sorted(args)
-    out = {}
+    out = []
     for a_name, a_type, a_desc in args:
         o = {'help':a_desc}
+        try:
+            o['type'] = getattr(builtins, a_type)
+        except AttributeError:
+            pass
         default = param2default[a_name]
         if default is not None:
             o['default'] = default
@@ -110,9 +120,10 @@ def get_parameters(f, args_prefix='', sort = True):
             o['help'] += f' [default: {default}].'
         else:
             a_name = args_prefix + a_name
-        out[a_name] = o
+        out.append((a_name, o))
     return short_description, out
 
+generate_description(f)
 
 def document_one(f):
     short, params = get_parameters(f, '')
@@ -123,8 +134,6 @@ def document_one(f):
 
 arg_parser = document_one(f)
 arg_parser.print_help()
-
-from vodkas import iadbs, peptide3d, get_fastas
 
 
 parse_google(get_fastas.__doc__)
