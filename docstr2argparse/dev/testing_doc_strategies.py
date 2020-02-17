@@ -14,38 +14,23 @@ parse_google(apex3d.__doc__)
 parse_google(get_fastas.__doc__)
 f = apex3d
 
-generate_description(f)
-
-
-def document(f, description=''):
-    short, params = get_parameters(f, '')
-    description = description if description else short
-    arg_parser = argparse.ArgumentParser(description=description)
-    for name, val in params.items():
-        arg_parser.add_argument(name, **val)
-    return arg_parser
-
-def document_many(foo_dict, description=''):
-    arg_parser = argparse.ArgumentParser(description=description)
-    for fname, f in foo_dict.items():
-        short, params = get_parameters(f, fname+'_')
-        for name, val in params.items():
-            arg_parser.add_argument(name, **val)
-    return arg_parser
+foo2argparse(f)
 
 
 
-document_one(apex3d).print_help()
-document_one(peptide3d).print_help()
-document_one(iadbs).print_help()
+
+
+document(apex3d).print_help()
+document(peptide3d).print_help()
+document(iadbs).print_help()
 
 
 args = document_many({'ape': apex3d, 'ia':iadbs, 'pep':peptide3d})
 args.print_help()
 
 
-
-
+from pprint import pprint
+pprint(foo2argparse(apex3d))
 
 # TODO:
 # add support for multiple functions

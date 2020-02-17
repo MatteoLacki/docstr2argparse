@@ -2,9 +2,7 @@
 
 This reduces the boilerplate for automatically creating command line scripts with python.
 Probably other projects like this exist, but this one is small.
-Right now we only support google style of documentation.
-This will be augmented with time, and extra dependency upon 'docstring_parser' droped.
-I needed this fast.
+Right now we only support google style of documentation, which is compatible with using Spinx with its extension: the Napoleon module.
 
 # How it works?
 
@@ -30,7 +28,6 @@ def apex3d(raw_folder,
     """A wrapper around the infamous Apex3D.
     
     It wraps in Python what would otherwise had to be called with a batch script.
-    Like a batch script? Com'on, this seriously sucks, just like all this Windows Crap.
 
     Args:
         raw_folder (str): a path to the input folder with raw Waters data.
@@ -57,153 +54,149 @@ def apex3d(raw_folder,
     pass
 ```
 
-Note the impoliteness towards Bill Gates' product in the long descroption.
-In you custom command line script you can now simply write:
+Our module helps to automatically parse the function signature and documentation and make it ready to be used with the `argparse` module.
 
+Look:
 ```{python}
-from docstr2argparse import register_docs
+from docstr2argparse import foo2argparse
 
-parser = register_docs(apex3d)
-args = parser.parse_args() # parser is just an 'argparse' parser object.
-
-print(args.__dict__)
+pprint(foo2argparse(apex3d))
+```
+gives:
+```{bash}
+In [197]: pprint(foo2argparse(apex3d))                                   
+('Analyze a Waters Raw Folder with Apex3D.',                             
+ [('--PLGS', {'default': True, 'help': 'No idea what it is. [default: True].'}),
+  ('--cuda', {'default': True, 'help': 'Use CUDA. [default: True].'}),
+  ('--high_energy_thr',
+   {'default': 30,
+    'help': "The minimal intensity of a fragment ion so that it ain't a noise "
+            'peak. [default: 30].',
+    'type': <class 'int'>}),
+  ('--lock_mass_tol_amu',
+   {'default': 0.25,
+    'help': 'Tolerance around lock mass (in atomic mass units, amu). [default: '
+            '0.25].',
+    'type': <class 'float'>}),
+  ('--lock_mass_z2',
+   {'default': 785.8426,
+    'help': 'The lock mass for doubly charged ion. [default: 785.8426].',
+    'type': <class 'float'>}),
+  ('--low_energy_thr',
+   {'default': 300,
+    'help': "The minimal intensity of a precursor ion so that it ain't a noise "
+            'peak. [default: 300].',
+    'type': <class 'int'>}),
+  ('--lowest_intensity_thr',
+   {'default': 750,
+    'help': 'The minimal intensity of a peak to be analyzed. [default: 750].',
+    'type': <class 'int'>}),
+  ('--max_used_cores',
+   {'default': 8,
+    'help': 'The maximal number of cores to use. [default: 8].',
+    'type': <class 'int'>}),
+  ('output_dir',
+   {'help': 'Path to where to place the output.', 'type': <class 'str'>}),
+  ('--path_to_apex3d',
+   {'default': 'C:/SYMPHONY_VODKAS/plgs/Apex3D64.exe',
+    'help': 'Path to the "Apex3D.exe" executable. [default: '
+            'C:/SYMPHONY_VODKAS/plgs/Apex3D64.exe].',
+    'type': <class 'str'>}),
+  ('raw_folder',
+   {'help': 'a path to the input folder with raw Waters data.',
+    'type': <class 'str'>}),
+  ('--timeout_apex3d',
+   {'default': 60,
+    'help': 'Timeout in minutes. [default: 60].',
+    'type': <class 'float'>}),
+  ('--unsupported_gpu',
+   {'default': True,
+    'help': "Try using an unsupported GPU for calculations. If it doesn't "
+            'work, the pipeline switches to CPU which is usually much slower. '
+            '[default: True].'}),
+  ('--write_binary',
+   {'default': True,
+    'help': 'Write the binary output in an xml in the output folder. [default: '
+            'True].'}),
+  ('--write_csv',
+   {'default': False,
+    'help': "Write the output in a csv in the output folder (doesn't work). "
+            '[default: False].'}),
+  ('--write_xml',
+   {'default': False,
+    'help': 'Write the output in an xml in the output folder. [default: '
+            'False].'})])
 ```
 
-Now, running it all from terminal (hopefully on all major platforms, I tested it on Windows and Ubuntu), you will see:
-```{bash}
-$ python our_custom_script -h
-usage: parse.py [-h] [--lock_mass_z2 LOCK_MASS_Z2]
-                [--lock_mass_tol_amu LOCK_MASS_TOL_AMU]
-                [--low_energy_thr LOW_ENERGY_THR]
-                [--high_energy_thr HIGH_ENERGY_THR]
-                [--lowest_intensity_thr LOWEST_INTENSITY_THR]
-                [--write_xml WRITE_XML] [--write_binary WRITE_BINARY]
-                [--write_csv WRITE_CSV] [--max_used_cores MAX_USED_CORES]
-                [--path_to_apex3d PATH_TO_APEX3D] [--PLGS PLGS] [--cuda CUDA]
-                [--unsupported_gpu UNSUPPORTED_GPU] [--debug DEBUG]
-                raw_folder output_dir
+Neet. But that's not all folks.
 
-A wrapper around the infamous Apex3D.
+```{python}
+from docstr2argparse import document
+
+document(apex3d).print_help()
+```
+generates the almighty help:
+```{bash}
+usage: ipython3 [-h] [--PLGS PLGS] [--cuda CUDA]                         
+                [--high_energy_thr HIGH_ENERGY_THR]
+                [--lock_mass_tol_amu LOCK_MASS_TOL_AMU]
+                [--lock_mass_z2 LOCK_MASS_Z2]
+                [--low_energy_thr LOW_ENERGY_THR]
+                [--lowest_intensity_thr LOWEST_INTENSITY_THR]
+                [--max_used_cores MAX_USED_CORES]
+                [--path_to_apex3d PATH_TO_APEX3D]
+                [--timeout_apex3d TIMEOUT_APEX3D]
+                [--unsupported_gpu UNSUPPORTED_GPU]
+                [--write_binary WRITE_BINARY] [--write_csv WRITE_CSV]
+                [--write_xml WRITE_XML]
+                output_dir raw_folder
+
+Analyze a Waters Raw Folder with Apex3D.
 
 positional arguments:
-  raw_folder            a path to the input folder with raw Waters data.
   output_dir            Path to where to place the output.
+  raw_folder            a path to the input folder with raw Waters data.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --lock_mass_z2 LOCK_MASS_Z2
-                        The lock mass for doubly charged ion (which one,
-                        dunno, but I guess a very important one). [default =
-                        785.8426]
-  --lock_mass_tol_amu LOCK_MASS_TOL_AMU
-                        Tolerance around lock mass (in atomic mass units,
-                        amu). [default = 0.25]
-  --low_energy_thr LOW_ENERGY_THR
-                        The minimal intensity of a precursor ion so that it
-                        ain't a noise peak. [default = 300]
+  --PLGS PLGS           No idea what it is. [default: True].
+  --cuda CUDA           Use CUDA. [default: True].
   --high_energy_thr HIGH_ENERGY_THR
                         The minimal intensity of a fragment ion so that it
-                        ain't a noise peak. [default = 30]
+                        ain't a noise peak. [default: 30].
+  --lock_mass_tol_amu LOCK_MASS_TOL_AMU
+                        Tolerance around lock mass (in atomic mass units,
+                        amu). [default: 0.25].
+  --lock_mass_z2 LOCK_MASS_Z2
+                        The lock mass for doubly charged ion. [default:
+                        785.8426].
+  --low_energy_thr LOW_ENERGY_THR
+                        The minimal intensity of a precursor ion so that it
+                        ain't a noise peak. [default: 300].
   --lowest_intensity_thr LOWEST_INTENSITY_THR
                         The minimal intensity of a peak to be analyzed.
-                        [default = 750]
-  --write_xml WRITE_XML
-                        Write the output in an xml in the output folder.
-                        [default = True]
-  --write_binary WRITE_BINARY
-                        Write the binary output in an xml in the output
-                        folder. [default = True]
-  --write_csv WRITE_CSV
-                        Write the output in a csv in the output folder
-                        (doesn't work). [default = False]
+                        [default: 750].
   --max_used_cores MAX_USED_CORES
-                        The maximal number of cores to use. [default = 1]
+                        The maximal number of cores to use. [default: 8].
   --path_to_apex3d PATH_TO_APEX3D
-                        Path to the "Apex3D.exe" executable. [default =
-                        C:/SYMPHONY_VODKAS/plgs/Apex3D64.exe]
-  --PLGS PLGS           No idea what it is. [default = True]
-  --cuda CUDA           Use CUDA. [default = True]
+                        Path to the "Apex3D.exe" executable. [default:
+                        C:/SYMPHONY_VODKAS/plgs/Apex3D64.exe].
+  --timeout_apex3d TIMEOUT_APEX3D
+                        Timeout in minutes. [default: 60].
   --unsupported_gpu UNSUPPORTED_GPU
                         Try using an unsupported GPU for calculations. If it
                         doesn't work, the pipeline switches to CPU which is
-                        usually much slower. [default = True]
-  --debug DEBUG         Debug mode. [default = False]
+                        usually much slower. [default: True].
+  --write_binary WRITE_BINARY
+                        Write the binary output in an xml in the output
+                        folder. [default: True].
+  --write_csv WRITE_CSV
+                        Write the output in a csv in the output folder
+                        (doesn't work). [default: False].
+  --write_xml WRITE_XML
+                        Write the output in an xml in the output folder.
+                        [default: False].
 ```
-
-Pretty neet, right?
-
-# More than one function
-Let's say you have multiple functions used in the script and want them all documented.
-Then:
-```{python}
-def foo1(a, b, c=1, d=2):
-    """Some function number 1.
-
-    Args:
-        a (int): the first param
-        b (str): the second param
-        c (int): some parameter
-        d (int): another parameter
-    Returns:
-        int: sum of the two ints
-    """
-    return a + b
-
-
-def foo2(e, f, g=1, h=2):
-    """Some function number 1.
-
-    Args:
-        e (int): the first param
-        f (str): the second param
-        g (int): some parameter 2
-        h (int): another parameter 2
-    Returns:
-        int: sum of the two ints
-    """
-    return e + f
-
-
-import argparse
-from itertools import chain
-
-from docstr2argparse import parse_arguments
-
-parser = argparse.ArgumentParser(description='A terribly needed script!')
-
-# print(dict(parse_arguments(foo1))) # this will be a simple dictonary!!!
-
-for name, kwds in chain(parse_arguments(foo1), parse_arguments(foo2)):
-    parser.add_argument(name, **kwds)
-
-args = parser.parse_args()
-
-print(foo1(args.a, args.b, args.c, args.d) + foo1(args.e, args.f, args.g, args.h))
-```
-
-With that script in place,
-```{bash}
-$ python3 example_with_2_functions.py -h
-usage: example_with_2_functions.py [-h] [--c C] [--d D] [--g G] [--h H]
-                                   a b e f
-
-A terribly needed script!
-
-positional arguments:
-  a           the first param
-  b           the second param
-  e           the first param
-  f           the second param
-
-optional arguments:
-  -h, --help  show this help message and exit
-  --c C       some parameter [default = 1]
-  --d D       another parameter [default = 2]
-  --g G       some parameter 2 [default = 1]
-  --h H       another parameter 2 [default = 2]
-```
-Of course, 'parse_arguments' can be used to initially parse things and then you can adjust things.
-For instance, it might be handy to adjust the names of the parameters that share their name.
 
 
 # Installation
