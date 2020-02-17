@@ -1,4 +1,5 @@
 import builtins
+from collections import defaultdict
 from inspect import signature, _empty
 import re
 import argparse
@@ -168,3 +169,57 @@ def document_many(foo_dict, description=''):
         for name, orig_name, val in params:
             arg_parser.add_argument(name, **val)
     return arg_parser
+
+
+class ParserDisambuigationEasy(object):
+    """Solve ambuiguious parameter names.
+
+    In case of ambuiguity, prepend function name.
+    """
+    def __init__(self, foos):
+        self.fnames = [f.__name__ for f in foos]
+        self.a2d = []
+        self.a2fn_o = {}
+        for f in foos:
+            for n,o,h in foo2argparse(f)[1]:
+                if n[0:2] == '--':
+                    fn = f.__name__
+                    self.a2d.append((f"--{fn}_{o}", h))
+                    self.a2fn_o[f"{fn}_{o}"] = fn, o
+
+    def parsed2kwds(self, parsed):
+        out = {f:{} for f in self.fnames}
+        for a,(f,o) in self.a2fn_o.items():
+            out[f][o] = parsed[a]
+        return out
+
+
+class ParserDisambuigationComplex(object):
+    """Solve ambuiguious parameter names.
+
+    In case of ambuiguity, prepend function name.
+    """
+    def __init__(self, foos):
+        a2fs = defaultdict(list)
+        self.fnames = set({})
+        for f in foos:
+            for n,o,h in foo2argparse(f)[1]:
+                if n[0:2] == '--':
+                    a2fs[o].append((f.__name__,h))
+                    self.fnames.add(f.__name__) 
+        a2f = {}
+        a2h = []
+        for a, fs in a2fs.items():
+            for f,h in fs:
+                f_a = f"{f}_{a}" if len(fs) > 1 else a
+                a2f[f_a] = (f,a)
+                a2h.append((f,f_a,h))
+        self.a2fs = a2fs
+        self.a2f = a2f
+        self.a2d = [('--'+f_a,h) for f,f_a,h in sorted(a2h, key=lambda x: (x[0],x[1]))]
+
+    def parsed2kwds(self, parsed):
+        out = {f:{} for f in self.fnames}
+        for a,(f,o) in self.a2f.items():
+            out[f][o] = parsed[a]
+        return out
