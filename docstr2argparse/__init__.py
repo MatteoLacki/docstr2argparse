@@ -1,1 +1,1 @@
-from .parse import register_docs, parse_arguments, foo2parser
+from .parse import foo2argparse, document, document_many, parse_google

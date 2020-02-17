@@ -142,10 +142,10 @@ def document(f, description=''):
     Returns:
         argparse.ArgumentParser: with instantiated arguments.
     """
-    short, params = get_parameters(f, '')
+    short, params = foo2argparse(f, '')
     description = description if description else short
     arg_parser = argparse.ArgumentParser(description=description)
-    for name, val in params.items():
+    for name, val in params:
         arg_parser.add_argument(name, **val)
     return arg_parser
 
@@ -164,7 +164,7 @@ def document_many(foo_dict, description=''):
     """
     arg_parser = argparse.ArgumentParser(description=description)
     for fname, f in foo_dict.items():
-        short, params = get_parameters(f, fname+'_')
-        for name, val in params.items():
+        short, params = foo2argparse(f, fname+'_')
+        for name, val in params:
             arg_parser.add_argument(name, **val)
     return arg_parser
