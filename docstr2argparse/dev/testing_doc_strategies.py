@@ -4,142 +4,26 @@ import argparse
 import re
 
 from vodkas import apex3d, peptide3d, iadbs, plgs, get_fastas
-from docstr2argparse.parse import parse_google, get_positional_or_keyword_params
-
-docstring_long = """Analyze a Waters Raw Folder with Apex3D.
+from docstr2argparse.parse import parse_google, get_positional_or_keyword_params, foo2argparse
 
 
-    Args:  
-        raw_folder (str): Args: a path to the input folder with raw Waters data.
-        output_dir (str): Path to where to place the output. Args:
-        lock_mass_z2 (float): The lock mass for doubly charged ion.
-        lock_mass_tol_amu (float): Tolerance around lock mass (in atomic mass units, amu).
-        low_energy_thr (int): The minimal intensity of a precursor ion so that it ain't a noise peak.
-        high_energy_thr (int): The minimal intensity of a fragment ion so that it ain't a noise peak.
-        lowest_intensity_thr (int): The minimal intensity of a peak to be analyzed.
-        write_xml (boolean): Write the output in an xml in the output folder.
-        write_binary (boolean): Write the binary output in an xml in the output folder.
-        write_csv (boolean): Write the output in a csv in the output folder (doesn't work).
-        max_used_cores (int): The maximal number of cores to use.
-        path_to_apex3d (str): Path to the "Apex3D.exe" executable.
-        PLGS (boolean): No idea what it is.
-        cuda (boolean): Use CUDA.
-        unsupported_gpu (boolean): Try using an unsupported GPU for calculations. If it doesn't work, the pipeline switches to CPU which is usually much slower.
-        timeout_apex3d (float): Timeout in minutes.
-        kwds: other parameters.
-
-
-    Returns:
-        tuple: the path to the outcome (no extension: choose it yourself and believe more in capitalism) and the completed process.
-
-
-    Yields:
-        haha: dszi
-    """
-
-docstring_short = """Analyze a Waters Raw Folder with Apex3D.
-
-    HAHAHA
-    """
-
-docstring_longer = """Analyze a Waters Raw Folder with Apex3D.
-    
-        Ale gówno.
-        Ja nie mogę.
-
-        Args:  
-            raw_folder (str): Args: a path to the input folder with raw Waters data.
-            output_dir (str): Path to where to place the output. Args:
-            lock_mass_z2 (float): The lock mass for doubly charged ion.
-            lock_mass_tol_amu (float): Tolerance around lock mass (in atomic mass units, amu).
-            low_energy_thr (int): The minimal intensity of a precursor ion so that it ain't a noise peak.
-            high_energy_thr (int): The minimal intensity of a fragment ion so that it ain't a noise peak.
-            lowest_intensity_thr (int): The minimal intensity of a peak to be analyzed.
-            write_xml (boolean): Write the output in an xml in the output folder.
-            write_binary (boolean): Write the binary output in an xml in the output folder.
-            write_csv (boolean): Write the output in a csv in the output folder (doesn't work).
-            max_used_cores (int): The maximal number of cores to use.
-            path_to_apex3d (str): Path to the "Apex3D.exe" executable.
-            PLGS (boolean): No idea what it is.
-            cuda (boolean): Use CUDA.
-            unsupported_gpu (boolean): Try using an unsupported GPU for calculations. If it doesn't work, the pipeline switches to CPU which is usually much slower.
-            timeout_apex3d (float): Timeout in minutes.
-            kwds: other parameters.
-
-
-        Returns:
-            tuple: the path to the outcome (no extension: choose it yourself and believe more in capitalism) and the completed process.
-
-
-        Yields:
-            haha: dszi
-        """
-
-parse_google(docstring_long)
-parse_google(docstring_short)
-parse_google(docstring_longer)
 def foo():
     pass
 parse_google(foo.__doc__)
-
-doc = parse_google(apex3d.__doc__)
-doc['Args']
-
-doc = parse_google(get_fastas.__doc__)
+parse_google(apex3d.__doc__)
+parse_google(get_fastas.__doc__)
 f = apex3d
-docstring = get_fastas.__doc__ 
-f = get_fastas
-get_positional_or_keyword_params(f)
-
-
-import builtins
-
-def generate_description(f, args_prefix='', sort = True):
-    param2default = get_positional_or_keyword_params(f)
-    parsed = parse_google(f.__doc__)
-    short_description = parsed['short_description']
-    args = parsed['Args']
-    args2desc = {n:d for n,_,d in args}
-    # checking docs' completeness
-    for p in param2default:
-        assert p in args2desc, f"Docs of {f} incomplete: {p} is missing."
-        assert args2desc[p]!='', f"Docs of {f} incomplete: {p} has empty description."
-    if sort:
-        args = sorted(args)
-    out = []
-    for a_name, a_type, a_desc in args:
-        o = {'help':a_desc}
-        try:
-            o['type'] = getattr(builtins, a_type)
-        except AttributeError:
-            pass
-        default = param2default[a_name]
-        if default is not None:
-            o['default'] = default
-            a_name = '--' + args_prefix + a_name # optionals are those with defaults
-            o['help'] += f' [default: {default}].'
-        else:
-            a_name = args_prefix + a_name
-        out.append((a_name, o))
-    return short_description, out
 
 generate_description(f)
 
-def document_one(f):
+
+def document(f, description=''):
     short, params = get_parameters(f, '')
-    arg_parser = argparse.ArgumentParser(description=short)
+    description = description if description else short
+    arg_parser = argparse.ArgumentParser(description=description)
     for name, val in params.items():
         arg_parser.add_argument(name, **val)
     return arg_parser
-
-arg_parser = document_one(f)
-arg_parser.print_help()
-
-
-parse_google(get_fastas.__doc__)
-get_params(get_fastas.__doc__)
-
-
 
 def document_many(foo_dict, description=''):
     arg_parser = argparse.ArgumentParser(description=description)
@@ -149,6 +33,11 @@ def document_many(foo_dict, description=''):
             arg_parser.add_argument(name, **val)
     return arg_parser
 
+
+
+document_one(apex3d).print_help()
+document_one(peptide3d).print_help()
+document_one(iadbs).print_help()
 
 
 args = document_many({'ape': apex3d, 'ia':iadbs, 'pep':peptide3d})
