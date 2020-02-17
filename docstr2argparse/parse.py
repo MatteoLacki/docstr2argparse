@@ -122,11 +122,11 @@ def foo2argparse(f, args_prefix='', sort = True):
         default = param2default[a_name]
         if default is not None:
             o['default'] = default
-            a_name = '--' + args_prefix + a_name # optionals are those with defaults
+            name = '--' + args_prefix + a_name # optionals are those with defaults
             o['help'] += f' [default: {default}].'
         else:
-            a_name = args_prefix + a_name
-        out.append((a_name, o))
+            name = args_prefix + a_name
+        out.append((name, a_name, o))
     return short_description, out
 
 
@@ -145,7 +145,7 @@ def document(f, description=''):
     short, params = foo2argparse(f, '')
     description = description if description else short
     arg_parser = argparse.ArgumentParser(description=description)
-    for name, val in params:
+    for name, orig_name, val in params:
         arg_parser.add_argument(name, **val)
     return arg_parser
 
@@ -165,6 +165,6 @@ def document_many(foo_dict, description=''):
     arg_parser = argparse.ArgumentParser(description=description)
     for fname, f in foo_dict.items():
         short, params = foo2argparse(f, fname+'_')
-        for name, val in params:
+        for name, orig_name, val in params:
             arg_parser.add_argument(name, **val)
     return arg_parser

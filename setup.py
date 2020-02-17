@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 setup(
     name='docstr2argparse',
     packages=find_packages(),
-    version='0.0.3',
+    version='0.0.4',
     description='Automatically generate CLI from a docstring.',
     author='Mateusz Krzysztof Łącki',
     author_email='matteo.lacki@gmail.com',
