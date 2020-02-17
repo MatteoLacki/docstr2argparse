@@ -124,7 +124,13 @@ def document_one(f):
 arg_parser = document_one(f)
 arg_parser.print_help()
 
-from vodkas import iadbs, peptide3d
+from vodkas import iadbs, peptide3d, get_fastas
+
+
+parse_google(get_fastas.__doc__)
+get_params(get_fastas.__doc__)
+
+
 
 def document_many(foo_dict, description=''):
     arg_parser = argparse.ArgumentParser(description=description)
@@ -134,8 +140,12 @@ def document_many(foo_dict, description=''):
             arg_parser.add_argument(name, **val)
     return arg_parser
 
-args = document_many({'iadbs':iadbs, 'peptide3d':peptide3d})
+
+
+args = document_many({'ape': apex3d, 'ia':iadbs, 'pep':peptide3d})
 args.print_help()
+
+
 
 
 
