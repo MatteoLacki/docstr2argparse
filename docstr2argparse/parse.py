@@ -5,6 +5,20 @@ import re
 import argparse
 
 
+def defaults(f):
+    """Get defaults of the function parameters.
+    
+    Warning: don't get into the problem of recursive dependencies.
+
+    Args:
+        f (function): A function to investigate.
+
+    Returns:
+        dict: Map parameter to its default value.
+    """
+    return {n:p.default for n,p in signature(f).parameters.items() if not p.default == _empty}
+
+
 def get_positional_or_keyword_params(f):
     """Get positional or keyword parameters from function signature.
     
@@ -124,7 +138,7 @@ def foo2argparse(f, args_prefix='', sort = True):
         if default is not None:
             o['default'] = default
             name = '--' + args_prefix + a_name # optionals are those with defaults
-            o['help'] += f' [default: {default}].'
+            # o['help'] += f' [default: {default}].'
         else:
             name = args_prefix + a_name
         out.append((name, a_name, o))
