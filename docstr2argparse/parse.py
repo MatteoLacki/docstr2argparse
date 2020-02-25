@@ -115,7 +115,7 @@ def test_parse_google():
     assert x == y, 'Parsing is wrong.'
 
 
-def foo2argparse(f, args_prefix='', sort = True):
+def foo2argparse(f, args_prefix='', positional=True, optional=True, get_short=True, sort=True):
     param2default = get_positional_or_keyword_params(f)
     parsed = parse_google(f.__doc__)
     short_description = parsed['short_description']
@@ -138,11 +138,16 @@ def foo2argparse(f, args_prefix='', sort = True):
         if default is not None:
             o['default'] = default
             name = '--' + args_prefix + a_name # optionals are those with defaults
-            # o['help'] += f' [default: {default}].'
+            if optional:
+                out.append((name, a_name, o))
         else:
             name = args_prefix + a_name
-        out.append((name, a_name, o))
-    return short_description, out
+            if positional:
+                out.append((name, a_name, o))
+    if get_short:
+        return short_description, out
+    else:
+        return out
 
 
 def document(f, description=''):
