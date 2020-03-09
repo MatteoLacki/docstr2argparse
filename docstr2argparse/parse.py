@@ -1,6 +1,6 @@
 import builtins
 from pprint import pprint
-from collections import defaultdict, namedtuple, OrderedDict
+from collections import namedtuple, OrderedDict
 from inspect import signature, _empty
 import re
 import argparse
@@ -249,34 +249,30 @@ class ParserDisambuigationEasy(object):
 ARG = namedtuple('ARG', 'name o_name info')
 
 
-class FooParser(object):
+class FooParser(OrderedDict):
     def __init__(self, foos):
-        foo2args = OrderedDict()
+        """Initiate the FooParser.
+
+        Args:
+            foos (iterable): Functions to construct parser of optional parameters for.
+        """
         for foo in foos:
             args = foo2argparse(foo, 
                                 get_short=False,
                                 positional=False,
                                 args_prefix= foo.__name__+'_')
-            foo2args[foo.__name__] = OrderedDict((o, ARG(n,o,h)) for n,o,h in args)
-        self.foo2args = foo2args
+            self[foo.__name__] = OrderedDict((o, ARG(n,o,h)) for n,o,h in args)
 
-    def modify_infos(self, mod_list):
-        for foo, arg, info_field, info_field_value in mod_list:
-            self.foo2args[foo][arg].info[info_field] = info_field_value
-    
-    def __getitem__(self, x):
-        return self.foo2args[x[0]][x[1]].info[x[2]]
+    def parse_kwds(self, parsed_args):
+        """Get kwds for foos in the parser.
 
-    def __setitem__(self, x, y):
-        self.foo2args[x[0]][x[1]].info[x[2]] = y
+        Results are saved in field 'kwds'.
 
-    def parse(self, parsed_args_dict):
-        parsed = defaultdict(dict)
-        for arg, val in parsed_args_dict.items():
+        Args:
+            parsed_args (dict): A dictionary with parsed values.
+        """
+        self.kwds = {foo_name:{} for foo_name in self}
+        for arg, val in parsed_args.items():
             foo, o_name = arg.split('_', 1)
-            if foo in self.foo2args and o_name in self.foo2args[foo]:
-                parsed[foo][o_name] = val
-        return dict(parsed)              
-
-    def print(self):
-        pprint(self.foo2args)        
+            if foo in self and o_name in self[foo]:
+                self.kwds[foo][o_name] = val
