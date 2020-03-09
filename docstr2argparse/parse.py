@@ -1,5 +1,4 @@
 import builtins
-from pprint import pprint
 from collections import namedtuple, OrderedDict
 from inspect import signature, _empty
 import re
@@ -263,6 +262,24 @@ class FooParser(OrderedDict):
                                 args_prefix= foo.__name__+'_')
             self[foo.__name__] = OrderedDict((o, ARG(n,o,h)) for n,o,h in args)
 
+    def set_to_store_true(self, args=['mock']):
+        for foo_name in self.keys():
+            for arg in args:
+                if arg in self[foo_name]:
+                    self[foo_name][arg].info['action'] = 'store_true'
+                    if 'type' in self[foo_name][arg].info:
+                       del self[foo_name][arg].info['type']
+
+    def updateParser(self, argparser):
+        """Update the arguments collected in the argparser.
+
+        Args:
+            argparser (argparse.ArgumentParser): Existing Parser.
+        """
+        for args in self.values():
+            for arg in args.values():
+                argparser.add_argument(arg.name, **arg.info)
+
     def parse_kwds(self, parsed_args):
         """Get kwds for foos in the parser.
 
@@ -276,3 +293,16 @@ class FooParser(OrderedDict):
             foo, o_name = arg.split('_', 1)
             if foo in self and o_name in self[foo]:
                 self.kwds[foo][o_name] = val
+
+    def mock(self):
+        """Make functions mock, if they support it."""
+        for foo_name, args in self.items():
+            if 'mock' in args:
+                args['mock'].info['default'] = True
+
+    def del_args(self, arg_names):
+        """Delete arguments with given names."""
+        for foo_name, args in self.items():
+            for arg in list(args):
+                if arg in arg_names:
+                    del self[foo_name][arg] 
