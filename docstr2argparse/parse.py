@@ -1,5 +1,6 @@
 import builtins
-from collections import defaultdict
+from pprint import pprint
+from collections import defaultdict, namedtuple, OrderedDict
 from inspect import signature, _empty
 import re
 import argparse
@@ -213,32 +214,69 @@ class ParserDisambuigationEasy(object):
         return out
 
 
-class ParserDisambuigationComplex(object):
-    """Solve ambuiguious parameter names.
 
-    In case of ambuiguity, prepend function name.
-    """
+# class ParserDisambuigationComplex(object):
+#     """Solve ambuiguious parameter names.
+
+#     In case of ambuiguity, prepend function name.
+#     """
+#     def __init__(self, foos):
+#         a2fs = defaultdict(list)
+#         self.fnames = set({})
+#         for f in foos:
+#             for n,o,h in foo2argparse(f)[1]:
+#                 if n[0:2] == '--':
+#                     a2fs[o].append((f.__name__,h))
+#                     self.fnames.add(f.__name__) 
+#         a2f = {}
+#         a2h = []
+#         for a, fs in a2fs.items():
+#             for f,h in fs:
+#                 f_a = f"{f}_{a}" if len(fs) > 1 else a
+#                 a2f[f_a] = (f,a)
+#                 a2h.append((f,f_a,h))
+#         self.a2fs = a2fs
+#         self.a2f = a2f
+#         self.a2d = [('--'+f_a,h) for f,f_a,h in sorted(a2h, key=lambda x: (x[0],x[1]))]
+
+#     def parsed2kwds(self, parsed):
+#         out = {f:{} for f in self.fnames}
+#         for a,(f,o) in self.a2f.items():
+#             out[f][o] = parsed[a]
+#         return out
+
+
+ARG = namedtuple('ARG', 'name o_name info')
+
+
+class FooParser(object):
     def __init__(self, foos):
-        a2fs = defaultdict(list)
-        self.fnames = set({})
-        for f in foos:
-            for n,o,h in foo2argparse(f)[1]:
-                if n[0:2] == '--':
-                    a2fs[o].append((f.__name__,h))
-                    self.fnames.add(f.__name__) 
-        a2f = {}
-        a2h = []
-        for a, fs in a2fs.items():
-            for f,h in fs:
-                f_a = f"{f}_{a}" if len(fs) > 1 else a
-                a2f[f_a] = (f,a)
-                a2h.append((f,f_a,h))
-        self.a2fs = a2fs
-        self.a2f = a2f
-        self.a2d = [('--'+f_a,h) for f,f_a,h in sorted(a2h, key=lambda x: (x[0],x[1]))]
+        foo2args = OrderedDict()
+        for foo in foos:
+            args = foo2argparse(foo, 
+                                get_short=False,
+                                positional=False,
+                                args_prefix= foo.__name__+'_')
+            foo2args[foo.__name__] = OrderedDict((o, ARG(n,o,h)) for n,o,h in args)
+        self.foo2args = foo2args
 
-    def parsed2kwds(self, parsed):
-        out = {f:{} for f in self.fnames}
-        for a,(f,o) in self.a2f.items():
-            out[f][o] = parsed[a]
-        return out
+    def modify_infos(self, mod_list):
+        for foo, arg, info_field, info_field_value in mod_list:
+            self.foo2args[foo][arg].info[info_field] = info_field_value
+    
+    def __getitem__(self, x):
+        return self.foo2args[x[0]][x[1]].info[x[2]]
+
+    def __setitem__(self, x, y):
+        self.foo2args[x[0]][x[1]].info[x[2]] = y
+
+    def parse(self, parsed_args_dict):
+        parsed = defaultdict(dict)
+        for arg, val in parsed_args_dict.items():
+            foo, o_name = arg.split('_', 1)
+            if foo in self.foo2args and o_name in self.foo2args[foo]:
+                parsed[foo][o_name] = val
+        return dict(parsed)              
+
+    def print(self):
+        pprint(self.foo2args)        
