@@ -10,3 +10,5 @@
 <!-- * maybe add groups with apex/iadbs/peptide3d and change the destination?
 	* no, call is ambiguous -->
 
+* move parsers to waters
+* iaDBs: provide direct arguments instead of search params file?

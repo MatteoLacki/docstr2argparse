@@ -290,9 +290,12 @@ class FooParser(OrderedDict):
         """
         self.kwds = {foo_name:{} for foo_name in self}
         for arg, val in parsed_args.items():
-            foo, o_name = arg.split('_', 1)
-            if foo in self and o_name in self[foo]:
-                self.kwds[foo][o_name] = val
+            try:
+                foo, o_name = arg.split('_', 1)
+                if foo in self and o_name in self[foo]:
+                    self.kwds[foo][o_name] = val
+            except ValueError:
+                pass
 
     def mock(self):
         """Make functions mock, if they support it."""
