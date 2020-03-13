@@ -1,5 +1,5 @@
 import builtins
-from collections import defaultdict
+from collections import namedtuple, OrderedDict
 from inspect import signature, _empty
 import re
 import argparse
@@ -213,32 +213,96 @@ class ParserDisambuigationEasy(object):
         return out
 
 
-class ParserDisambuigationComplex(object):
-    """Solve ambuiguious parameter names.
 
-    In case of ambuiguity, prepend function name.
-    """
+# class ParserDisambuigationComplex(object):
+#     """Solve ambuiguious parameter names.
+
+#     In case of ambuiguity, prepend function name.
+#     """
+#     def __init__(self, foos):
+#         a2fs = defaultdict(list)
+#         self.fnames = set({})
+#         for f in foos:
+#             for n,o,h in foo2argparse(f)[1]:
+#                 if n[0:2] == '--':
+#                     a2fs[o].append((f.__name__,h))
+#                     self.fnames.add(f.__name__) 
+#         a2f = {}
+#         a2h = []
+#         for a, fs in a2fs.items():
+#             for f,h in fs:
+#                 f_a = f"{f}_{a}" if len(fs) > 1 else a
+#                 a2f[f_a] = (f,a)
+#                 a2h.append((f,f_a,h))
+#         self.a2fs = a2fs
+#         self.a2f = a2f
+#         self.a2d = [('--'+f_a,h) for f,f_a,h in sorted(a2h, key=lambda x: (x[0],x[1]))]
+
+#     def parsed2kwds(self, parsed):
+#         out = {f:{} for f in self.fnames}
+#         for a,(f,o) in self.a2f.items():
+#             out[f][o] = parsed[a]
+#         return out
+
+
+ARG = namedtuple('ARG', 'name o_name info')
+
+
+class FooParser(OrderedDict):
     def __init__(self, foos):
-        a2fs = defaultdict(list)
-        self.fnames = set({})
-        for f in foos:
-            for n,o,h in foo2argparse(f)[1]:
-                if n[0:2] == '--':
-                    a2fs[o].append((f.__name__,h))
-                    self.fnames.add(f.__name__) 
-        a2f = {}
-        a2h = []
-        for a, fs in a2fs.items():
-            for f,h in fs:
-                f_a = f"{f}_{a}" if len(fs) > 1 else a
-                a2f[f_a] = (f,a)
-                a2h.append((f,f_a,h))
-        self.a2fs = a2fs
-        self.a2f = a2f
-        self.a2d = [('--'+f_a,h) for f,f_a,h in sorted(a2h, key=lambda x: (x[0],x[1]))]
+        """Initiate the FooParser.
 
-    def parsed2kwds(self, parsed):
-        out = {f:{} for f in self.fnames}
-        for a,(f,o) in self.a2f.items():
-            out[f][o] = parsed[a]
-        return out
+        Args:
+            foos (iterable): Functions to construct parser of optional parameters for.
+        """
+        for foo in foos:
+            args = foo2argparse(foo, 
+                                get_short=False,
+                                positional=False,
+                                args_prefix= foo.__name__+'_')
+            self[foo.__name__] = OrderedDict((o, ARG(n,o,h)) for n,o,h in args)
+
+    def set_to_store_true(self, args=['mock']):
+        for foo_name in self.keys():
+            for arg in args:
+                if arg in self[foo_name]:
+                    self[foo_name][arg].info['action'] = 'store_true'
+                    if 'type' in self[foo_name][arg].info:
+                       del self[foo_name][arg].info['type']
+
+    def updateParser(self, argparser):
+        """Update the arguments collected in the argparser.
+
+        Args:
+            argparser (argparse.ArgumentParser): Existing Parser.
+        """
+        for args in self.values():
+            for arg in args.values():
+                argparser.add_argument(arg.name, **arg.info)
+
+    def parse_kwds(self, parsed_args):
+        """Get kwds for foos in the parser.
+
+        Results are saved in field 'kwds'.
+
+        Args:
+            parsed_args (dict): A dictionary with parsed values.
+        """
+        self.kwds = {foo_name:{} for foo_name in self}
+        for arg, val in parsed_args.items():
+            foo, o_name = arg.split('_', 1)
+            if foo in self and o_name in self[foo]:
+                self.kwds[foo][o_name] = val
+
+    def mock(self):
+        """Make functions mock, if they support it."""
+        for foo_name, args in self.items():
+            if 'mock' in args:
+                args['mock'].info['default'] = True
+
+    def del_args(self, arg_names):
+        """Delete arguments with given names."""
+        for foo_name, args in self.items():
+            for arg in list(args):
+                if arg in arg_names:
+                    del self[foo_name][arg] 
