@@ -294,12 +294,6 @@ class FooParser(OrderedDict):
             if foo in self and o_name in self[foo]:
                 self.kwds[foo][o_name] = val
 
-    def mock(self):
-        """Make functions mock, if they support it."""
-        for foo_name, args in self.items():
-            if 'mock' in args:
-                args['mock'].info['default'] = True
-
     def del_args(self, arg_names):
         """Delete arguments with given names."""
         for foo_name, args in self.items():
