@@ -213,38 +213,6 @@ class ParserDisambuigationEasy(object):
         return out
 
 
-
-# class ParserDisambuigationComplex(object):
-#     """Solve ambuiguious parameter names.
-
-#     In case of ambuiguity, prepend function name.
-#     """
-#     def __init__(self, foos):
-#         a2fs = defaultdict(list)
-#         self.fnames = set({})
-#         for f in foos:
-#             for n,o,h in foo2argparse(f)[1]:
-#                 if n[0:2] == '--':
-#                     a2fs[o].append((f.__name__,h))
-#                     self.fnames.add(f.__name__) 
-#         a2f = {}
-#         a2h = []
-#         for a, fs in a2fs.items():
-#             for f,h in fs:
-#                 f_a = f"{f}_{a}" if len(fs) > 1 else a
-#                 a2f[f_a] = (f,a)
-#                 a2h.append((f,f_a,h))
-#         self.a2fs = a2fs
-#         self.a2f = a2f
-#         self.a2d = [('--'+f_a,h) for f,f_a,h in sorted(a2h, key=lambda x: (x[0],x[1]))]
-
-#     def parsed2kwds(self, parsed):
-#         out = {f:{} for f in self.fnames}
-#         for a,(f,o) in self.a2f.items():
-#             out[f][o] = parsed[a]
-#         return out
-
-
 ARG = namedtuple('ARG', 'name o_name info')
 
 
